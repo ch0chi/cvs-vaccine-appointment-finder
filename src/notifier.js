@@ -8,12 +8,13 @@ export const Notifier = class Notifier {
         this.slackWebhook = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
     }
 
-    async sendSuccessNotification() {
+    async sendSuccessNotification(location,dates) {
+
         await this.slackWebhook.send({
             "text": "<!channel> Vaccine Found!",
             "attachments": [
                 {
-                    "text": `Appointments have been found within 35 miles of ${process.env.ADDRESS}`
+                    "text": `Location: ${location}.\n Available dates: ${dates}`
                 }
             ]
         });
