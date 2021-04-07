@@ -26,6 +26,8 @@ If any environment variables are changed after the container has been built, you
 
 To view logs:
    - `docker-compose logs -f --tail=100`
+
+
 ##Notes
 1. While not required, it's recommended you proxy the container through a vpn.
 2. When the application finds an appointment, it will stop until started again.
