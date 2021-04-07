@@ -15,7 +15,7 @@ a slack notification will be sent via the associated slack webhook.
         - ADDRESS="Denver, CO." (Use either a zip code or City,State)
         - FIRST_DOSE_DATE="2021-04-01" (Be sure to maintain formatting)
         - VACCINE_TYPE="moderna" (Use either "moderna" or "pfizer" _lowercase only_)
-        - REFRESH_TIME=2000 (Time, in seconds, that the app will attempt to fetch appointments)**use only seconds**)
+        - REFRESH_TIME=2000 (Time, **in seconds only**, that the app will attempt to fetch appointments)
     
 **_All environment variables are required before running the container._**
 ##Usage
