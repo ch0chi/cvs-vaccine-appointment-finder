@@ -1,0 +1,5 @@
+*.bak
+.env
+./src/node_modules
+usr/
+.idea/
