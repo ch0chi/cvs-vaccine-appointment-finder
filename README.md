@@ -15,12 +15,17 @@ a slack notification will be sent via the associated slack webhook.
         - ADDRESS="Denver, CO." (Use either a zip code or City,State)
         - FIRST_DOSE_DATE="2021-04-01" (Be sure to maintain formatting)
         - VACCINE_TYPE="moderna" (Use either "moderna" or "pfizer" _lowercase only_)
-        - REFRESH_TIME=2000 (Time, **in seconds only**, that the app will attempt to fetch appointments)
+        - REFRESH_TIME=5 (Time, **in seconds only**, that the app will attempt to fetch appointments)
     
 **_All environment variables are required before running the container._**
 ##Usage
 `docker-compose up -d`
 
+If any environment variables are changed after the container has been built, you'll have to rebuild the container:
+   - `docker-compose down && docker-compose up --build -d`
+
+To view logs:
+   - `docker-compose logs -f --tail=100`
 ##Notes
 1. While not required, it's recommended you proxy the container through a vpn.
 2. When the application finds an appointment, it will stop until started again.

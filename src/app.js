@@ -1,7 +1,7 @@
-const axios = require('axios');
-const {IncomingWebhook} = require('@slack/webhook');
+import axios from 'axios';
+import {Notifier} from './notifier.js';
 const ndc = getNdcFromVaccine();
-const webhook = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
+const notifier = new Notifier();
 let interval = null;
 
 async function fetchVaccine() {
@@ -48,13 +48,17 @@ async function fetchVaccine() {
             console.log(res.data);
             let resMetaData = res.data.responseMetaData;
             if (resMetaData.statusCode === '0000') {
-                sendSlackNotification();
-                stop(); //clear interval because vaccines have been found
+                notifier.sendSuccessNotification().then(() => {
+                    wait(); //clear interval because vaccines have been found
+                })
             }
         })
         .catch(err => {
             console.log(err.error);
-            stop();
+            notifier.sendErrorNotification().then(() => {
+                stop();//todo is this even needed?
+                process.exit(0);
+            })
         })
 }
 
@@ -70,23 +74,17 @@ function getNdcFromVaccine() {
     return "";
 }
 
-async function sendSlackNotification() {
-    await webhook.send({
-        "text": "Vaccine Found!",
-        "attachments": [
-            {
-                "text": `<!channel> Appointments have been found within 35 miles of ${process.env.ADDRESS}`
-            }
-        ]
-    });
-}
-
 async function start() {
-    interval = setInterval(await fetchVaccine, parseInt(process.env.REFRESH_TIME));
+    interval = setInterval(await fetchVaccine, parseInt(process.env.REFRESH_TIME)*1000);
 }
 
 function stop() {
     clearInterval(interval);
+}
+
+async function wait() {
+    stop();
+    interval = setInterval(await fetchVaccine, 600000)
 }
 
 start()
