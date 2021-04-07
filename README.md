@@ -5,9 +5,11 @@ a slack notification will be sent via the associated slack webhook.
 **Only supports Pfizer and Moderna.**
 
 ##Installation:
-1. Copy the .env.example file to a new .env file
+1. `git clone git@github.com:ch0chi/cvs-vaccine-appointment-finder.git`
+2. `cd cvs-vaccine-appointment-finder`
+3. Copy the .env.example file to a new .env file
    - `cp .env.example .env`
-2. Open the .env file and add associated environment variables.
+4. Open the .env file and add associated environment variables.
     - Example:
         - SLACK_WEBHOOK_URL="slack webhook url "
         - ADDRESS="Denver, CO." (Use either a zip code or City,State)
