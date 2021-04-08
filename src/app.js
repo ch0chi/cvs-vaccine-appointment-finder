@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import axios from 'axios';
 import {Notifier} from './notifier.js';
 import fs from 'fs';
@@ -63,10 +65,14 @@ async function fetchVaccine(ndc,location) {
             }
         })
         .catch(err => {
-            console.log(err.error);
-            notifier.sendErrorNotification().then(() => {
-                stop(location.name);//todo is this even needed?
-                process.exit(0);
+            let errMsg = {
+                "location": location.address,
+                "code":err.response.status,
+                "statusText":err.response.statusText,
+            }
+            console.log(`Error occurred with ${location.name}. Details: ${JSON.stringify(errMsg)}`);
+            notifier.sendErrorNotification(location.name,errMsg).then(() => {
+                wait(location.name, 5000);
             })
         })
 }
@@ -81,7 +87,8 @@ function getNdcFromVaccine(vaccType) {
     return "";
 }
 
-async function start() {
+function start() {
+    console.log("Starting...");
 
     for(let location of locations) {
         let vaccType = getNdcFromVaccine(location.vaccineType);
@@ -95,19 +102,14 @@ function stop(intervalName) {
     clearInterval(intervals[intervalName]);
 }
 
-async function wait(intervalName) {
+async function wait(intervalName,timeout = 60000) {
     stop(intervalName);
     let location = locations.find(o => o.name === intervalName);
     let vaccType = getNdcFromVaccine(location.vaccineType);
     intervals[intervalName] = setInterval(async () => {
-        await fetchVaccine(vaccType,location.firstDoseDate,location.address)
-    },60000)
+        await fetchVaccine(vaccType,location);
+    },timeout)
 }
 
-start()
-    .then(() => {
-        console.log(intervals);
-
-        console.log("Starting...")
-    })
+start();
 
