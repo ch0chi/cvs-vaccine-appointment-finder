@@ -84,7 +84,7 @@ async function fetchVaccine(ndc,location) {
             }
             console.log(`Error occurred with ${location.name}. Details: ${JSON.stringify(errMsg)}`);
             notifier.sendErrorNotification(location.name,errMsg).then(() => {
-                wait(location.name, 5000);
+                wait(location.name);
             })
         })
 }
