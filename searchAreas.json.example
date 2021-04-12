@@ -1,0 +1,14 @@
+[
+  {
+    "name": "denver-moderna",
+    "address": "80223",
+    "firstDoseDate": "2021-04-01",
+    "vaccineType": "moderna"
+  },
+  {
+    "name": "colorado-springs-pfizer",
+    "address": "Colorado Springs, CO.",
+    "firstDoseDate": "2021-04-01",
+    "vaccineType": "pfizer"
+  },
+]

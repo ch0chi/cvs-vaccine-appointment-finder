@@ -51,9 +51,11 @@ async function fetchVaccine(ndc,location) {
         .then(res => {
             let resMetaData = res.data.responseMetaData;
             let address = location.address;
+            let time = new Date();
             let logData = {
+                fetchTime: time,
                 area: address,
-                message: resMetadata.statusDesc
+                message: resMetaData.statusDesc
             }
             console.log(JSON.stringify(logData));
 
@@ -65,10 +67,20 @@ async function fetchVaccine(ndc,location) {
             }
         })
         .catch(err => {
-            let errMsg = {
-                "location": location.address,
-                "code":err.response.status,
-                "statusText":err.response.statusText,
+            let errMsg = {};
+            if(err.response.statusCode){
+                errMsg = {
+                    "location": location.address,
+                    "code":err.response.statusCode,
+                    "statusText":err.response.statusText,
+                }
+            }
+            else{
+                errMsg = {
+                    "location": location.address,
+                    "code":"na",
+                    "error": err
+                }
             }
             console.log(`Error occurred with ${location.name}. Details: ${JSON.stringify(errMsg)}`);
             notifier.sendErrorNotification(location.name,errMsg).then(() => {
@@ -89,7 +101,6 @@ function getNdcFromVaccine(vaccType) {
 
 function start() {
     console.log("Starting...");
-
     for(let location of locations) {
         let vaccType = getNdcFromVaccine(location.vaccineType);
         intervals[location.name] = setInterval(async () => {
