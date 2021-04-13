@@ -8,23 +8,36 @@ export const Notifier = class Notifier {
         this.slackWebhook = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
     }
 
-    async sendSuccessNotification() {
+    async sendSuccessNotification(location,dates) {
+
         await this.slackWebhook.send({
             "text": "<!channel> Vaccine Found!",
             "attachments": [
                 {
-                    "text": `Appointments have been found within 35 miles of ${process.env.ADDRESS}`
+                    "text": `Location: ${location}.\n Available dates: ${dates}`
                 }
             ]
         });
     }
 
-    async sendErrorNotification() {
+    async sendErrorNotification(locationName, error) {
+        let formattedError = JSON.stringify(error);
         await this.slackWebhook.send({
-            "text": "<!channel> Error Detected!",
-            "attachments": [
+            "blocks": [
                 {
-                    "text": `An error occurred while running the script, and the script has exited. Check the logs for more information`
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": `<!channel> There was an error with *${locationName}*, and the script has exited`
+                    },
+
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "`" + formattedError + "`"
+                    }
                 }
             ]
         });

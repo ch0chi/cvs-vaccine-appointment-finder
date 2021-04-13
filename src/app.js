@@ -1,10 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import axios from 'axios';
 import {Notifier} from './notifier.js';
-const ndc = getNdcFromVaccine();
+import fs from 'fs';
 const notifier = new Notifier();
-let interval = null;
+let intervals = [];
+let rawData = fs.readFileSync('./searchAreas.json');
+const locations = JSON.parse(rawData);
 
-async function fetchVaccine() {
+async function fetchVaccine(ndc,location) {
     let payload = {
         "requestMetaData":
             {
@@ -27,12 +31,12 @@ async function fetchVaccine() {
                     {
                         "imzType": "CVD",
                         "ndc": ndc,
-                        "firstDoseDate": process.env.FIRST_DOSE_DATE,
+                        "firstDoseDate": location.firstDoseDate,
                         "allocationType": "3"
                     }
                 ],
                 "searchCriteria":
-                    {"addressLine": process.env.ADDRESS}
+                    {"addressLine": location.address}
             }
     };
     let headers = {
@@ -45,26 +49,47 @@ async function fetchVaccine() {
     }
     await axios.post('https://www.cvs.com/Services/ICEAGPV1/immunization/1.0.0/getIMZStores', payload, headers)
         .then(res => {
-            console.log(res.data);
             let resMetaData = res.data.responseMetaData;
+            let address = location.address;
+            let time = new Date();
+            let logData = {
+                fetchTime: time,
+                area: address,
+                message: resMetaData.statusDesc
+            }
+            console.log(JSON.stringify(logData));
+
             if (resMetaData.statusCode === '0000') {
-                notifier.sendSuccessNotification().then(() => {
-                    wait(); //clear interval because vaccines have been found
+                const dates = Object.values(res.data.responsePayloadData.availableDates);
+                notifier.sendSuccessNotification(location.address,dates).then(() => {
+                    wait(location.name); //clear interval because vaccines have been found
                 })
             }
         })
         .catch(err => {
-            console.log(err.error);
-            notifier.sendErrorNotification().then(() => {
-                stop();//todo is this even needed?
-                process.exit(0);
+            let errMsg = {};
+            if(err.response.statusCode){
+                errMsg = {
+                    "location": location.address,
+                    "code":err.response.statusCode,
+                    "statusText":err.response.statusText,
+                }
+            }
+            else{
+                errMsg = {
+                    "location": location.address,
+                    "code":"na",
+                    "error": err
+                }
+            }
+            console.log(`Error occurred with ${location.name}. Details: ${JSON.stringify(errMsg)}`);
+            notifier.sendErrorNotification(location.name,errMsg).then(() => {
+                wait(location.name);
             })
         })
 }
 
-function getNdcFromVaccine() {
-    const vaccType = process.env.VACCINE_TYPE;
-
+function getNdcFromVaccine(vaccType) {
     if (vaccType === 'moderna') {
         return ["80777027399"];
     }
@@ -74,21 +99,29 @@ function getNdcFromVaccine() {
     return "";
 }
 
-async function start() {
-    interval = setInterval(await fetchVaccine, parseInt(process.env.REFRESH_TIME)*1000);
+function start() {
+    console.log("Starting...");
+    for(let location of locations) {
+        let vaccType = getNdcFromVaccine(location.vaccineType);
+        intervals[location.name] = setInterval(async () => {
+            await fetchVaccine(vaccType,location)
+        },parseInt(process.env.REFRESH_TIME)*1000);
+
+    }
 }
 
-function stop() {
-    clearInterval(interval);
+function stop(intervalName) {
+    clearInterval(intervals[intervalName]);
 }
 
-async function wait() {
-    stop();
-    interval = setInterval(await fetchVaccine, 600000)
+async function wait(intervalName,timeout = 900) {
+    stop(intervalName);
+    let location = locations.find(o => o.name === intervalName);
+    let vaccType = getNdcFromVaccine(location.vaccineType);
+    intervals[intervalName] = setInterval(async () => {
+        await fetchVaccine(vaccType,location);
+    },timeout*1000)
 }
 
-start()
-    .then(() => {
-        console.log("Starting...")
-    })
+start();
 
