@@ -105,7 +105,8 @@ function start() {
         let vaccType = getNdcFromVaccine(location.vaccineType);
         intervals[location.name] = setInterval(async () => {
             await fetchVaccine(vaccType,location)
-        },parseInt(process.env.REFRESH_TIME)*1000)
+        },parseInt(process.env.REFRESH_TIME)*1000);
+
     }
 }
 
@@ -113,13 +114,13 @@ function stop(intervalName) {
     clearInterval(intervals[intervalName]);
 }
 
-async function wait(intervalName,timeout = 60000) {
+async function wait(intervalName,timeout = 900) {
     stop(intervalName);
     let location = locations.find(o => o.name === intervalName);
     let vaccType = getNdcFromVaccine(location.vaccineType);
     intervals[intervalName] = setInterval(async () => {
         await fetchVaccine(vaccType,location);
-    },timeout)
+    },timeout*1000)
 }
 
 start();
